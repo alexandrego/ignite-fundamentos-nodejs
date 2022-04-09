@@ -84,6 +84,18 @@ app.use(express.json()); //Usamos esse middleware para podermos receber dados JS
     return next();
   }
 
+  function getBalance(statement) {
+    const balance = statement.reduce((acc, operation) => {
+      if(operation.type === 'credit') {
+        return acc + operation.amount;
+      } else {
+        return acc - operation.amount;
+      }
+    }, 0);
+
+    return balance;
+  }
+
   app.post("/account", (request, response) => {
     const { cpf, name } = request.body;
 
@@ -124,6 +136,28 @@ app.use(express.json()); //Usamos esse middleware para podermos receber dados JS
     customer.statement.push(statementOperation);
 
     return response.status(201).json({ mesage: "🥳 Deposit made successfully!" });
+  });
+
+  app.post("/withdraw", verifyIfExistsAccountCPF, (request, response) => {
+    const { amount } = request.body;
+    const { customer } = request;
+
+    const balance = getBalance(customer.statement);
+
+    if (balance < amount) {
+      return response.status(400).json({ error: "😔 Insufficient funds!" });
+    }
+
+    const statementOperation = {
+      amount,
+      created_at: new Date(),
+      type: "debit"
+    };
+
+    customer.statement.push(statementOperation);
+
+    return response.status(201).json({ mesage: "💸 Withdraw sucessfuly!" });
+
   });
 /** Fim Segunda aula */
 
