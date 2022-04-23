@@ -1,4 +1,5 @@
 const { request } = require('express');
+const { response } = require('express');
 const express = require('express');
 const { v4: uuidv4 } = require("uuid")
 
@@ -158,6 +159,53 @@ app.use(express.json()); //Usamos esse middleware para podermos receber dados JS
 
     return response.status(201).json({ mesage: "💸 Withdraw sucessfuly!" });
 
+  });
+
+  app.get("/statement/date", verifyIfExistsAccountCPF, (request, response) => {
+    const { customer } = request; //Dessa forma eu recupero a informação processada no middleware
+    const { date } = request.query;
+
+    const dateFormat = new Date(date + " 00:00");
+
+    const statement = customer.statement.filter(
+      (statement) =>
+        statement.created_at.toDateString() ===
+        new Date(dateFormat).toDateString()
+    );
+
+    return response.json(statement);
+  });
+
+  app.put("/account", verifyIfExistsAccountCPF, (request, response) => {
+    const { name } = request.body;
+    const { customer } = request;
+
+    customer.name = name;
+
+    return response.status(201).json({ mesage: "✅ Name Changed Successfully!" });
+  });
+
+  app.get("/account", verifyIfExistsAccountCPF, (request, response) => {
+    const { customer } = request;
+
+    return response.json(customer);
+  });
+
+  app.delete("/account", verifyIfExistsAccountCPF, (request, response) =>{
+    const { customer } = request;
+
+    //splice
+    customers.splice(customer, 1);
+
+    return response.status(200).json(customers);
+  });
+
+  app.get("/balance", verifyIfExistsAccountCPF, (request, response) => {
+    const { customer } = request;
+
+    const balance = getBalance(customer.statement);
+
+    return response.json(balance);
   });
 /** Fim Segunda aula */
 
